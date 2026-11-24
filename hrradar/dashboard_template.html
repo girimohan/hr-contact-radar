@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>HR Contact Radar</title>
+<style>
+:root{
+  --paper:#F1EFEA; --panel:#FAF9F6; --ink:#1D1A16; --muted:#645D54; --line:#D6D0C6;
+  --accent:#1F5C8C; --accent-soft:#DCE7F0; --pine:#0B6B50; --pine-soft:#D5E9E0;
+  --amber:#9A5A00; --amber-soft:#F4E5C6; --slate-soft:#E5E1DA; --danger:#A3352B; --danger-soft:#F3DCD8;
+  --display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif; --body:"Segoe UI",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#16140F; --panel:#1E1B16; --ink:#ECE7DF; --muted:#A79F94; --line:#38332B;
+  --accent:#7DB4E0; --accent-soft:#1D3243; --pine:#5FD1A7; --pine-soft:#173B30;
+  --amber:#F0B45A; --amber-soft:#3D2E12; --slate-soft:#2A2620; --danger:#F08A7E; --danger-soft:#43211D;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 15px/1.5 var(--body)}
+a{color:var(--accent)}
+button,select,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+header.top{padding:28px 0 4px}
+h1{font:700 clamp(28px,4.2vw,42px)/1.05 var(--display);letter-spacing:-.01em;margin:0}
+.sub{color:var(--muted);margin:6px 0 0;max-width:70ch}
+.stats{display:flex;flex-wrap:wrap;gap:10px 28px;margin:18px 0 0}
+.stat b{display:block;font:700 26px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:13.5px}
+nav.tabs{display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line)}
+nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;cursor:pointer;font-weight:500;color:var(--muted)}
+nav.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+nav.tabs .n{font-size:12.5px;margin-left:5px;padding:0 7px;border-radius:99px;background:var(--slate-soft)}
+.layout{display:grid;grid-template-columns:240px 1fr;gap:28px;padding:20px 0 60px}
+@media (max-width:820px){.layout{grid-template-columns:1fr;gap:12px}}
+aside h2{font:700 15px/1.2 var(--display);margin:18px 0 6px}
+aside h2:first-child{margin-top:0}
+.pick{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:5px;padding:5px 8px;cursor:pointer}
+.pick:hover{background:var(--slate-soft)}
+.pick[aria-pressed=true]{background:var(--accent-soft);font-weight:600}
+.pick span:last-child{color:var(--muted);font-variant-numeric:tabular-nums}
+label.chk{display:flex;gap:8px;align-items:flex-start;padding:4px 8px;cursor:pointer}
+label.chk input{margin-top:4px;accent-color:var(--accent)}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.bar input[type=search]{flex:1 1 220px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.bar select{padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.count{color:var(--muted);font-size:13.5px;margin:0 0 6px}
+ol.leads{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+ol.leads>li{border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:50px 1fr auto;gap:14px;align-items:start;width:100%;padding:12px 4px;background:none;border:0;text-align:left;cursor:pointer}
+.row:hover{background:var(--panel)}
+.score{font:700 22px/1 var(--display);font-variant-numeric:tabular-nums;padding-top:2px}
+.title{font-weight:600;font-size:16px;line-height:1.3}
+.meta{color:var(--muted);font-size:13.5px;margin-top:2px}
+.who{margin-top:5px;font-size:14px}
+.who b{font-weight:600}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.tag{font-size:12.5px;padding:1px 8px;border-radius:99px;background:var(--slate-soft)}
+.tag.good{background:var(--pine-soft);color:var(--pine)}
+.tag.mid{background:var(--accent-soft);color:var(--accent)}
+.tag.warn{background:var(--amber-soft);color:var(--amber)}
+.tag.new{background:var(--amber);color:var(--paper);font-weight:600}
+.state{font-size:13px;color:var(--muted);white-space:nowrap;padding-top:4px}
+.state.on{color:var(--pine);font-weight:600}
+.state.due{color:var(--amber);font-weight:600}
+.more{padding:2px 4px 20px 68px;display:grid;gap:14px}
+@media (max-width:600px){.more{padding-left:4px}.row{grid-template-columns:40px 1fr}.state{grid-column:2}}
+.more p{margin:0;max-width:75ch}
+.why{color:var(--muted);font-size:13.5px}
+.contacts{display:grid;gap:8px;max-width:78ch}
+.contact{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.contact input{margin-top:5px;accent-color:var(--accent)}
+.contact .nm{font-weight:600}
+.contact .how{font-size:13px;color:var(--muted)}
+.contact .ev{grid-column:2/4;font-size:13px;color:var(--muted);font-style:italic}
+.contact .ev a{font-style:normal}
+.contact code{font:13.5px/1.4 ui-monospace,Consolas,monospace;background:var(--slate-soft);padding:1px 5px;border-radius:4px;word-break:break-all}
+.warnline{color:var(--amber);font-size:13px}
+.draft{display:grid;gap:8px;max-width:78ch}
+.draft input,.draft textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.draft textarea{min-height:230px;resize:vertical;line-height:1.45}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{display:inline-block;padding:7px 14px;border-radius:6px;border:1px solid var(--line);background:var(--panel);cursor:pointer;text-decoration:none;color:var(--ink);font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.btn.small{padding:3px 10px;font-size:13px}
+.track{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.track select,.track input{padding:7px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.track textarea{width:100%;max-width:78ch;min-height:52px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+.empty{padding:40px 8px;color:var(--muted)}
+.notice{border-left:3px solid var(--amber);background:var(--amber-soft);padding:10px 14px;border-radius:0 6px 6px 0;max-width:80ch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;max-width:80ch}
+.panel h3{font:700 17px/1.2 var(--display);margin:0 0 8px}
+table.src{border-collapse:collapse;font-size:14px;width:100%}
+table.src td,table.src th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.src th{color:var(--muted);font-weight:500}
+.err{color:var(--danger)}
+footer{color:var(--muted);font-size:13px;padding:0 0 40px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:6px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>HR Contact Radar</h1>
+  <p class="sub">Nordic and remote openings with the person you can write to. Pick a contact, check the draft, send it from your own email. Your tracker stays in this browser.</p>
+  <div class="stats" id="stats"></div>
+</header>
+<nav class="tabs" role="tablist" id="tabs">
+  <button role="tab" data-tab="leads" aria-selected="true">Leads</button>
+  <button role="tab" data-tab="follow" aria-selected="false">Follow-ups<span class="n" id="nfollow">0</span></button>
+  <button role="tab" data-tab="sent" aria-selected="false">Contacted<span class="n" id="nsent">0</span></button>
+  <button role="tab" data-tab="about" aria-selected="false">Sources and rules</button>
+</nav>
+<div class="layout" id="main">
+  <aside id="side">
+    <h2>Where</h2><div id="f-country"></div>
+    <h2>Contact</h2><div id="f-contact"></div>
+    <h2>Role</h2><div id="f-role"></div>
+    <h2>Show</h2>
+    <label class="chk"><input type="checkbox" id="f-new"> New since last run</label>
+    <label class="chk"><input type="checkbox" id="f-hidecontacted" checked> Hide companies I already wrote to</label>
+    <label class="chk"><input type="checkbox" id="f-english"> English postings only</label>
+  </aside>
+  <section>
+    <div class="bar">
+      <input type="search" id="q" placeholder="Search title, company, person" aria-label="Search">
+      <select id="sort" aria-label="Sort"><option value="score">Best first</option><option value="new">Newest first</option><option value="company">Company A-Z</option></select>
+    </div>
+    <p class="count" id="count"></p>
+    <ol class="leads" id="list"></ol>
+  </section>
+</div>
+<div class="layout" id="aboutview" hidden><div></div><section id="about"></section></div>
+<footer class="wrap" id="foot"></footer>
+</div>
+<div id="toast" role="status"></div>
+<script>
+const DATA = /*__DATA__*/null;
+const STORE = "hr-contact-radar:v1";
+const COUNTRY = {fi:"Finland", se:"Sweden", no:"Norway", dk:"Denmark", is:"Iceland", nordic:"Nordics", remote:"Remote (Europe)"};
+const QUALITY = {named:"Named person", mailbox:"Recruiting mailbox", site:"From company website", none:"No contact yet"};
+const STATUS = [["","Not contacted"],["emailed","Emailed"],["replied","Replied"],["interview","Interview"],["no","Not interested"],["dnc","Do not contact again"]];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+let tracker = {};
+try { tracker = JSON.parse(localStorage.getItem(STORE) || "{}"); } catch { tracker = {}; }
+const save = () => localStorage.setItem(STORE, JSON.stringify(tracker));
+const today = new Date().toISOString().slice(0, 10);
+const daysSince = d => d ? Math.floor((Date.parse(today) - Date.parse(d)) / 864e5) : null;
+const FOLLOW = (DATA.outreach && DATA.outreach.follow_up_days) || 7;
+const state = {tab:"leads", country:null, contact:null, role:null, open:new Set()};
+
+function quality(l){
+  const c = l.contacts[0];
+  if (!c) return "none";
+  if ((c.kind === "posting" || c.kind === "ats_field") && c.name) return "named";
+  if (c.kind === "company_page") return "site";
+  if (c.email) return "mailbox";
+  return "none";
+}
+function companyKey(l){ return (l.domain || l.company).toLowerCase(); }
+function companyContacted(l){
+  const k = companyKey(l);
+  for (const [id, t] of Object.entries(tracker)) if (t.company === k && t.status && id !== l.id) return t;
+  return null;
+}
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.classList.add("on"); setTimeout(() => t.classList.remove("on"), 1600); }
+
+function fill(tpl, v){ return tpl.replace(/\{(\w+)\}/g, (_, k) => v[k] ?? ""); }
+function draftFor(l, c, follow){
+  const p = DATA.profile || {}, o = DATA.outreach || {};
+  const fi = l.language === "fi" && o.body_fi, sv = (l.language === "sv") && o.body_sv;
+  const first = (c && c.name) ? (c.name.split(/\s+/).find(w => !/^(professor|prof\.?|dr\.?|mr\.?|ms\.?|mrs\.?)$/i.test(w)) || "") : "";
+  const greet = fi ? (first ? `Hei ${first},` : "Hei,") : sv ? (first ? `Hej ${first},` : "Hej,") : (first ? `Hi ${first},` : "Hello,");
+  const v = {greeting:greet, first_name:first, contact_name:c?.name || "", job_title:l.title, company:l.company,
+    job_url:l.url, your_name:p.name || "", your_email:p.email || "", your_phone:p.phone || "", headline:p.headline || "",
+    pitch:(p.pitch || "").trim(), portfolio_url:p.portfolio_url || "", cv_url:p.cv_url || "", linkedin_url:p.linkedin_url || "",
+    github_url:p.github_url || ""};
+  const body = follow ? (fi && o.follow_up_fi ? o.follow_up_fi : o.follow_up) : (fi ? o.body_fi : sv ? o.body_sv : o.body);
+  const subj = follow ? (o.follow_up_subject || "Re: {job_title}") : (fi && o.subject_fi ? o.subject_fi : o.subject);
+  const clean = s => s.split("\n").filter(line => !/^\s*\S+:\s*$/.test(line)).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return {subject: fill(subj || "{job_title}", v).replace(/[\s:–-]+$/, ""), body: clean(fill(body || "", v))};
+}
+
+function stats(){
+  const L = DATA.leads;
+  const named = L.filter(l => quality(l) === "named").length;
+  const any = L.filter(l => quality(l) !== "none").length;
+  const sent = Object.values(tracker).filter(t => t.status).length;
+  $("stats").innerHTML = [
+    [L.length, "openings"], [named, "with a named person"], [any, "with someone to write to"],
+    [DATA.new_today, "new since last run"], [sent, "contacted by you"]
+  ].map(([n, t]) => `<div class="stat"><b>${n.toLocaleString()}</b><span>${t}</span></div>`).join("");
+}
+
+function picks(el, key, counts, labels){
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  el.innerHTML = [`<button class="pick" data-k="${key}" data-v="" aria-pressed="${state[key] === null}"><span>All</span><span>${Object.values(counts).reduce((a, b) => a + b, 0)}</span></button>`]
+    .concat(entries.map(([v, n]) => `<button class="pick" data-k="${key}" data-v="${esc(v)}" aria-pressed="${state[key] === v}"><span>${esc(labels ? labels[v] || v : v)}</span><span>${n}</span></button>`)).join("");
+}
+
+function filtered(){
+  const q = $("q").value.trim().toLowerCase();
+  const onlyNew = $("f-new").checked, hide = $("f-hidecontacted").checked, en = $("f-english").checked;
+  let L = DATA.leads.filter(l => {
+    const t = tracker[l.id] || {};
+    if (state.tab === "leads" && t.status) return false;
+    if (state.tab === "sent" && !t.status) return false;
+    if (state.tab === "follow" && !(t.status === "emailed" && daysSince(t.date) >= FOLLOW)) return false;
+    if (state.tab === "leads" && hide && companyContacted(l)) return false;
+    if (state.country && l.country !== state.country) return false;
+    if (state.contact && quality(l) !== state.contact) return false;
+    if (state.role && l.role !== state.role) return false;
+    if (onlyNew && l.first_seen !== DATA.date) return false;
+    if (en && l.language !== "en") return false;
+    if (q) {
+      const hay = `${l.title} ${l.company} ${l.location} ${l.contacts.map(c => c.name + " " + c.email + " " + c.role).join(" ")}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const s = $("sort").value;
+  if (s === "new") L.sort((a, b) => (b.first_seen + b.posted).localeCompare(a.first_seen + a.posted));
+  else if (s === "company") L.sort((a, b) => a.company.localeCompare(b.company));
+  return L;
+}
+
+function contactHtml(l, c, i){
+  const sel = (tracker[l.id]?.pick ?? 0) === i;
+  const how = c.email_guessed ? "address built from the company's email format, not seen written down" : c.label;
+  const ev = c.evidence ? (c.evidence.startsWith("http") ? `<a href="${esc(c.evidence)}" target="_blank" rel="noopener">${esc(c.evidence)}</a>` : `“${esc(c.evidence)}”`) : "";
+  return `<label class="contact"><input type="radio" name="pick-${esc(l.id)}" data-pick="${i}" data-id="${esc(l.id)}" ${sel ? "checked" : ""}>
+    <div><div class="nm">${esc(c.name || c.role || "Mailbox")}${c.name && c.role ? ` <span class="how">· ${esc(c.role)}</span>` : ""}</div>
+      <div>${c.email ? `<code>${esc(c.email)}</code>` : `<span class="how">no email</span>`}${c.phone ? ` · ${esc(c.phone)}` : ""}</div>
+      <div class="how">${esc(how)}${c.mx_ok === false ? ' · <span class="err">domain does not accept mail</span>' : ""}</div></div>
+    <div>${c.email ? `<button class="btn small" data-copy="${esc(c.email)}">Copy</button>` : ""}</div>
+    ${ev ? `<div class="ev">${ev}</div>` : ""}</label>`;
+}
+
+function detail(l){
+  const t = tracker[l.id] || {};
+  const pick = l.contacts[t.pick ?? 0];
+  const follow = state.tab === "follow";
+  const d = t.draft && !follow ? t.draft : draftFor(l, pick, follow);
+  const other = companyContacted(l);
+  const guessed = pick && pick.email_guessed;
+  return `<div class="more">
+    ${l.snippet ? `<p>${esc(l.snippet)}${l.snippet.length >= 500 ? "…" : ""}</p>` : ""}
+    <p class="why">${esc(l.reasons.join(" · "))}</p>
+    ${other ? `<p class="notice">You already wrote to ${esc(l.company)} about another opening (${esc(other.status)}, ${esc(other.date || "")}). One message per company is usually enough.</p>` : ""}
+    ${l.contacts.length ? `<div class="contacts">${l.contacts.map((c, i) => contactHtml(l, c, i)).join("")}</div>`
+      : `<p class="notice">Nobody is named in this posting and the company's website gave no recruiting address. Apply through the posting, or look up the hiring team on LinkedIn.</p>`}
+    ${pick && pick.email ? `<div class="draft">
+      ${guessed ? `<p class="warnline">This address is a guess. Check it (for example on LinkedIn or the company site) before sending.</p>` : ""}
+      <input data-subj="${esc(l.id)}" value="${esc(d.subject)}" aria-label="Subject">
+      <textarea data-body="${esc(l.id)}" aria-label="Message">${esc(d.body)}</textarea>
+      <div class="actions">
+        <a class="btn primary" data-mail="${esc(l.id)}" href="#">Open in my email app</a>
+        <a class="btn" data-gmail="${esc(l.id)}" href="#" target="_blank" rel="noopener">Open in Gmail</a>
+        <button class="btn" data-copytext="${esc(l.id)}">Copy message</button>
+        <button class="btn" data-reset="${esc(l.id)}">Reset draft</button>
+      </div>
+      <p class="why">Attach your CV in the email app before sending. Sending marks this opening as emailed.</p></div>` : ""}
+    <div class="track">
+      <a class="btn" href="${esc(l.url)}" target="_blank" rel="noopener">Open posting</a>
+      <select data-status="${esc(l.id)}" aria-label="Status">${STATUS.map(([v, n]) => `<option value="${v}" ${t.status === v ? "selected" : ""}>${n}</option>`).join("")}</select>
+      ${t.date ? `<span class="why">since ${esc(t.date)}</span>` : ""}
+      <textarea data-notes="${esc(l.id)}" placeholder="Notes (reply, who you spoke to, next step)">${esc(t.notes || "")}</textarea>
+    </div></div>`;
+}
+
+function render(){
+  stats();
+  const all = DATA.leads;
+  const cnt = f => all.reduce((m, l) => { const k = f(l); if (k) m[k] = (m[k] || 0) + 1; return m; }, {});
+  picks($("f-country"), "country", cnt(l => l.country), COUNTRY);
+  picks($("f-contact"), "contact", cnt(quality), QUALITY);
+  picks($("f-role"), "role", cnt(l => l.role));
+  $("nfollow").textContent = all.filter(l => { const t = tracker[l.id]; return t && t.status === "emailed" && daysSince(t.date) >= FOLLOW; }).length;
+  $("nsent").textContent = all.filter(l => tracker[l.id]?.status).length;
+  const L = filtered();
+  $("count").textContent = `${L.length.toLocaleString()} shown` + (state.tab === "follow" ? ` · emailed ${FOLLOW}+ days ago without a reply` : "");
+  $("list").innerHTML = L.length ? L.slice(0, 400).map(l => {
+    const t = tracker[l.id] || {}, c = l.contacts[0], q = quality(l);
+    const qtag = {named:["good","Named person"], site:["mid","Contact from website"], mailbox:["mid","Recruiting mailbox"], none:["warn","No contact"]}[q];
+    const due = t.status === "emailed" && daysSince(t.date) >= FOLLOW;
+    const st = t.status ? (STATUS.find(s => s[0] === t.status) || [,t.status])[1] + (t.date ? ` ${t.date.slice(5)}` : "") : "";
+    return `<li><button class="row" data-open="${esc(l.id)}" aria-expanded="${state.open.has(l.id)}">
+      <div class="score">${l.score}</div>
+      <div><div class="title">${esc(l.title)}</div>
+        <div class="meta">${esc(l.company)} · ${esc(l.location || COUNTRY[l.country] || "")}${l.posted ? ` · posted ${esc(l.posted)}` : ""} · ${esc(l.source)}</div>
+        ${c ? `<div class="who"><b>${esc(c.name || c.email)}</b>${c.name && c.role ? `, ${esc(c.role)}` : !c.name && c.role ? ` (${esc(c.role)})` : ""}${c.email_guessed ? " · address guessed" : ""}</div>` : ""}
+        <div class="tags"><span class="tag ${qtag[0]}">${qtag[1]}</span>${l.first_seen === DATA.date && !DATA.first_run ? '<span class="tag new">New</span>' : ""}
+          <span class="tag">${esc(COUNTRY[l.country] || l.country)}</span>${l.language !== "en" ? `<span class="tag warn">${esc({fi:"Finnish",sv:"Swedish",no:"Norwegian",da:"Danish"}[l.language] || l.language)} posting</span>` : ""}
+          <span class="tag">${esc(l.role)}</span></div></div>
+      <div class="state ${due ? "due" : t.status ? "on" : ""}">${due ? "follow up" : esc(st)}</div></button>
+      ${state.open.has(l.id) ? detail(l) : ""}</li>`;
+  }).join("") : `<li class="empty">Nothing matches these filters.</li>`;
+}
+
+function aboutView(){
+  const rows = DATA.sources.map(s => `<tr><td>${esc(s.name)}</td><td class="${s.ok ? "" : "err"}">${s.ok ? "ok" : "failed"}</td><td>${s.fetched.toLocaleString()}</td><td>${s.kept}</td><td>${esc(s.error || s.detail || "")}</td></tr>`).join("");
+  const f = DATA.funnel, e = DATA.enrichment || {};
+  $("about").innerHTML = `<div class="panel"><h3>Today's run</h3>
+    <p>${f.collected.toLocaleString()} postings read · ${f.place.toLocaleString()} outside the Nordics or not open to Europe · ${f.role.toLocaleString()} other roles · ${f.duplicate} duplicates · <b>${DATA.leads.length.toLocaleString()} kept</b>.</p>
+    <p>Company websites: ${e.sites_read || 0} read today, ${e.sites_cached || 0} from cache, ${e.domains_guessed || 0} new domains found. Generated ${esc(DATA.generated_at)}.</p></div>
+    <div class="panel" style="margin-top:14px"><h3>Sources</h3><table class="src"><tr><th>Source</th><th></th><th>Read</th><th>Kept</th><th>Detail</th></tr>${rows}</table></div>
+    <div class="panel" style="margin-top:14px"><h3>How contacts are ranked</h3>
+    <p>1. A person named in the posting, with the address written there. 2. A named person whose address is built from the format the posting or company site gives (marked as a guess). 3. The contact field in the job board's own data. 4. The posting's application address. 5. A recruiter or hiring leader on the company's website. 6. A recruiting or general mailbox on the company's website.</p>
+    <p>Only work contact details that the company itself published are used. Contacts are stored on this computer only, are dropped when the posting disappears, and nothing is ever sent for you.</p></div>
+    <div class="panel" style="margin-top:14px"><h3>Your tracker</h3><p>Stored in this browser. Back it up now and then.</p>
+    <div class="actions"><button class="btn" id="export">Download my tracker</button><label class="btn">Restore from file<input type="file" id="import" accept="application/json" hidden></label></div></div>`;
+  $("export").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(tracker, null, 1)], {type:"application/json"})); a.download = `hr-radar-tracker-${today}.json`; a.click(); };
+  $("import").onchange = ev => { const f = ev.target.files[0]; if (!f) return; f.text().then(t => { tracker = Object.assign(tracker, JSON.parse(t)); save(); toast("Tracker restored"); render(); }); };
+}
+
+function setStatus(id, status){
+  const l = DATA.leads.find(x => x.id === id);
+  const t = tracker[id] = tracker[id] || {};
+  if (t.status !== status) t.date = status ? today : "";
+  t.status = status;
+  t.company = companyKey(l); t.title = l.title; t.company_name = l.company; t.url = l.url;
+  if (!status) delete tracker[id];
+  save();
+}
+function current(id){
+  const l = DATA.leads.find(x => x.id === id);
+  const t = tracker[id] || {};
+  const c = l.contacts[t.pick ?? 0];
+  const subj = document.querySelector(`[data-subj="${CSS.escape(id)}"]`).value;
+  const body = document.querySelector(`[data-body="${CSS.escape(id)}"]`).value;
+  return {l, c, subj, body};
+}
+
+document.addEventListener("click", ev => {
+  const el = ev.target.closest("[data-open],[data-k],[data-copy],[data-mail],[data-gmail],[data-copytext],[data-reset],[data-tab]");
+  if (!el) return;
+  if (el.dataset.tab) {
+    state.tab = el.dataset.tab;
+    document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", b === el));
+    $("main").hidden = state.tab === "about"; $("aboutview").hidden = state.tab !== "about";
+    if (state.tab === "about") aboutView(); else render();
+    return;
+  }
+  if (el.dataset.open) { const id = el.dataset.open; state.open.has(id) ? state.open.delete(id) : state.open.add(id); render(); return; }
+  if (el.dataset.k) { state[el.dataset.k] = el.dataset.v || null; render(); return; }
+  if (el.dataset.copy) { ev.preventDefault(); navigator.clipboard.writeText(el.dataset.copy); toast("Address copied"); return; }
+  if (el.dataset.copytext) { const {subj, body} = current(el.dataset.copytext); navigator.clipboard.writeText(`${subj}\n\n${body}`); toast("Message copied"); return; }
+  if (el.dataset.reset) { const t = tracker[el.dataset.reset]; if (t) { delete t.draft; save(); } render(); return; }
+  if (el.dataset.mail || el.dataset.gmail) {
+    const id = el.dataset.mail || el.dataset.gmail;
+    const {c, subj, body} = current(id);
+    if (el.dataset.mail) el.href = `mailto:${encodeURIComponent(c.email)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+    else el.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(c.email)}&su=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+    setStatus(id, "emailed"); tracker[id].to = c.email; save();
+    setTimeout(render, 300);
+  }
+});
+document.addEventListener("change", ev => {
+  const el = ev.target;
+  if (el.dataset.pick !== undefined) { const t = tracker[el.dataset.id] = tracker[el.dataset.id] || {}; t.pick = +el.dataset.pick; delete t.draft; if (!t.status) t.company = companyKey(DATA.leads.find(x => x.id === el.dataset.id)); save(); render(); }
+  else if (el.dataset.status !== undefined) { setStatus(el.dataset.status, el.value); render(); }
+  else if (["f-new","f-hidecontacted","f-english","sort"].includes(el.id)) render();
+});
+document.addEventListener("input", ev => {
+  const el = ev.target;
+  if (el.id === "q") return render();
+  const id = el.dataset.notes || el.dataset.subj || el.dataset.body;
+  if (!id) return;
+  const t = tracker[id] = tracker[id] || {};
+  if (el.dataset.notes) t.notes = el.value;
+  else { const {subj, body} = current(id); t.draft = {subject: subj, body}; }
+  if (!t.company) t.company = companyKey(DATA.leads.find(x => x.id === id));
+  save();
+});
+$("foot").innerHTML = `Data from ${DATA.sources.filter(s => s.ok).map(s => esc(s.name)).join(", ")}. Each opening links to its original posting. Generated ${esc(DATA.date)}.`;
+render();
+</script>
+</body>
+</html>

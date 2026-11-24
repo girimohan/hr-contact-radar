@@ -1,0 +1,164 @@
+# HR Contact Radar: everything you are likely to tune lives in this file.
+
+# Used in the email drafts. Fill these in before your first run.
+profile:
+  name: ""                 # Your Name
+  email: ""                # the address you send from (shown in the signature)
+  phone: ""
+  headline: "AI / ML engineer building LLM and RAG products in Python"
+  portfolio_url: ""        # https://...
+  cv_url: ""               # optional public link to your CV; otherwise attach the PDF when sending
+  linkedin_url: ""
+  github_url: ""
+  # Two or three sentences about what you do and what you are looking for. Shown in every draft.
+  pitch: >
+    I build production LLM and RAG systems in Python (FastAPI, vector databases, evaluation pipelines)
+    and have shipped them end to end, from data to deployment. I am based in Finland and open to
+    full-time or contract work, on-site in the Helsinki area or remote.
+  # Skills that add to a lead's score when the posting mentions them.
+  skills: [python, fastapi, rag, llm, langchain, llamaindex, vector database, embeddings, pytorch, mlops,
+           docker, postgres, supabase, next.js, react, typescript, aws, kubernetes, fine-tuning, agents]
+
+# Drafts. Placeholders: {greeting} {first_name} {contact_name} {job_title} {company} {job_url} {your_name}
+# {your_email} {your_phone} {headline} {pitch} {portfolio_url} {cv_url} {linkedin_url} {github_url}
+# A line that ends up as just "Label:" (because the value is empty) is removed.
+outreach:
+  follow_up_days: 7
+  subject: "{job_title}: {your_name}"
+  body: |
+    {greeting}
+
+    I saw the {job_title} opening at {company} and wanted to write to you directly rather than only through the form.
+
+    {pitch}
+
+    Portfolio: {portfolio_url}
+    CV: {cv_url}
+    LinkedIn: {linkedin_url}
+
+    If my background fits this role, or another one on your team, I would be glad to have a short call.
+
+    Best regards,
+    {your_name}
+    {your_phone}
+  # Used for postings written in Finnish. Delete to always write in English.
+  subject_fi: "{job_title}: {your_name}"
+  body_fi: |
+    {greeting}
+
+    Huomasin, että {company} hakee tekijää tehtävään {job_title}, ja halusin olla yhteydessä suoraan.
+
+    {pitch}
+
+    Portfolio: {portfolio_url}
+    CV: {cv_url}
+    LinkedIn: {linkedin_url}
+
+    Jos taustani sopii tähän tai johonkin muuhun tiimin tehtävään, keskustelen mielelläni lisää.
+
+    Ystävällisin terveisin,
+    {your_name}
+    {your_phone}
+  follow_up_subject: "Re: {job_title}: {your_name}"
+  follow_up: |
+    {greeting}
+
+    A quick follow-up on my note about the {job_title} role at {company}. I am still very interested and
+    happy to share more about my work or do a short call whenever suits you.
+
+    Portfolio: {portfolio_url}
+
+    Best regards,
+    {your_name}
+
+# Roles are checked top to bottom; the first whose keywords appear in the title wins.
+# weight (0-1) says how much you want that role.
+roles:
+  - name: AI / LLM Engineer
+    weight: 1.0
+    title_any: [tekoäly, tekoälykehittäjä, tekoälyasiantuntija, tekoälyinsinööri, ai-utvecklare, ai-ingenjör,
+                ai engineer, llm, generative ai, genai, gen ai, applied ai, ai agent, agent engineer, agentic, rag,
+                ai developer, ai software engineer, ai product engineer, ai backend, ai platform, ai/ml, ai & ml,
+                ai application, ai research engineer, conversational ai, nlp engineer, ai specialist, ai consultant]
+  - name: ML Engineer / MLOps
+    weight: 0.95
+    title_any: [koneoppimisinsinööri, koneoppimisasiantuntija, koneoppiminen, maskininlärning, machine learning,
+                ml engineer, mlops, ml ops, ml platform, ml infrastructure, applied scientist, research engineer,
+                ml developer, data scientist, datatieteilijä, maskinlæring, maskinlæringsingeniør,
+                dataforsker, ki-utvikler, ki-ingeniør, kunstig intelligens]
+  - name: Solutions / Automation Engineer
+    weight: 0.8
+    title_any: [forward deployed, solutions engineer, solution engineer, automation engineer, ai solutions,
+                implementation engineer, integration engineer, customer engineer, ai automation]
+  - name: Backend Engineer
+    weight: 0.85
+    title_any: [ohjelmistokehittäjä, sovelluskehittäjä, ohjelmistosuunnittelija, backend-kehittäjä, ohjelmoija,
+                systemutvecklare, mjukvaruutvecklare, backendutvecklare, utvikler, systemudvikler, udvikler,
+                systemutvikler, programvareutvikler, backendutvikler, applikasjonsutvikler, softwareudvikler,
+                softwareutvikler, it-utvikler, programmør, softwareingeniør,
+                backend, back-end, back end, python developer, python engineer, api engineer, platform engineer,
+                software engineer, software developer, pythonkehittäjä, python-kehittäjä]
+  - name: Full-Stack Engineer
+    weight: 0.8
+    title_any: [full stack -kehittäjä, web-kehittäjä, fullstack-kehittäjä, full stack, full-stack, fullstack,
+                product engineer, web developer, react developer, fullstackutvecklare, webbutvecklare, fullstackutvikler,
+                frontendutvikler, webudvikler, fullstackudvikler]
+  - name: Data Engineer
+    weight: 0.7
+    title_any: [data-insinööri, datainsinööri, data engineer, analytics engineer, data platform, dataingenjör,
+                dataingeniør, dataarkitekt, cloud-ingeniør]
+
+# A title containing any of these is dropped.
+exclude_title: [director, vp, vice president, head of, engineering manager, manager, recruiter, account executive,
+                sales, marketing, designer, attorney, counsel, nurse, driver, embedded, firmware, hardware,
+                mechanical, electrical, civil, ios, android, salesforce, sap, servicenow, .net, php, ruby, golang,
+                c++, java, scala, security clearance, myyjä, myynti, säljare, selger, sælger, lääkäri, sairaanhoitaja,
+                opettaja, lärare, lærer, kesätyö, sommarjobb, harjoittelija]
+
+# Places kept: fi se no dk is, nordic (named the region only), remote (remote and open to Europe or anywhere).
+keep_places: ["fi", "se", "no", "dk", "is", "nordic", "remote"]   # quoted: YAML reads a bare no as false
+
+min_score: 30
+keep_without_contact: true   # keep openings even when nobody could be found (shown as "No contact yet")
+language_penalty: 8           # points off for postings in Finnish, Swedish, Norwegian or Danish
+retention_days: 120           # the first-seen ledger forgets jobs this long gone
+
+# Staffing agencies and aggregators to ignore (their recruiters rarely hire for the named company).
+agency_blocklist: [jobgether, jobs for humanity, staffing, recruitment agency, talent solutions, crossing hurdles,
+                   virtualvocations, bjak, 10xteam, academic work, barona, adecco, manpower, randstad, poolia,
+                   eilakaisla, opteam, studentwork, workpilots, perso, aimo henkilöstöpalvelut]
+
+# Reading company websites when a posting names nobody.
+enrichment:
+  enabled: true
+  max_sites_per_run: 120      # new websites read per run (cached ones are free)
+  max_pages_per_site: 6
+  refresh_days: 14
+  max_site_contacts: 3
+  guess_without_format: true  # firstname.lastname@ for a named person when the company's format is unknown
+  default_format: "."
+
+# Company name -> website domain, when the radar cannot find it or picks the wrong one.
+domains:
+  # "Example Oy": example.fi
+
+# Where to find company job boards: this project's data/companies.json, plus remote-job-radar's list if present.
+shared_companies: ../remote-job-radar/data/companies.json
+
+sources:
+  # Public employment services: official APIs that list the contact person for each ad.
+  jobtech: {enabled: true, days: 30, pages_per_query: 2}   # Sweden, Arbetsförmedlingen; no key needed
+    # queries: [python, machine learning, ...]   # defaults to a list of tech searches
+  nav: {enabled: true, max_pages: 60, start_days: 21}       # Norway; public token, or set NAV_FEED_TOKEN
+  # Nordic ATS feeds, one per company. List the companies in data/companies.json.
+  hrmanager: {enabled: true}     # "alias" from https://recruiter-api.hr-manager.net/jobportal.svc/<alias>/...
+  teamtailor: {enabled: true}    # "acme" for acme.teamtailor.com, or the careers domain, e.g. "career.acme.fi"
+  recruitee: {enabled: true}     # "acme" for acme.recruitee.com
+  laura: {enabled: true}         # "acme" for acme.rekrytointi.com (Finnish ATS)
+  varbi: {enabled: true}         # "kth" for kth.varbi.com (Swedish public sector)
+  # International company boards (shared with remote-job-radar) and Hacker News.
+  greenhouse: {enabled: true}
+  lever: {enabled: true}
+  ashby: {enabled: true}
+  smartrecruiters: {enabled: true}
+  hackernews: {enabled: true}
