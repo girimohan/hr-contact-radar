@@ -2,22 +2,25 @@
 
 # Used in the email drafts. Fill these in before your first run.
 profile:
-  name: ""                 # Your Name
-  email: ""                # the address you send from (shown in the signature)
-  phone: ""
-  headline: "AI / ML engineer building LLM and RAG products in Python"
-  portfolio_url: ""        # https://...
+  name: "Mohan Giri"
+  email: ""                # kept in the RADAR_PROFILE secret, not here (this repo is public)
+  phone: ""                # same
+  headline: "Machine Learning Engineer, M.Sc. student in Computer Science (ML & AI) at the University of Helsinki"
+  portfolio_url: "https://girimohan.vercel.app/"
   cv_url: ""               # optional public link to your CV; otherwise attach the PDF when sending
-  linkedin_url: ""
-  github_url: ""
+  linkedin_url: "https://www.linkedin.com/in/girimohan8/"
+  github_url: "https://github.com/girimohan"
   # Two or three sentences about what you do and what you are looking for. Shown in every draft.
   pitch: >
-    I build production LLM and RAG systems in Python (FastAPI, vector databases, evaluation pipelines)
-    and have shipped them end to end, from data to deployment. I am based in Finland and open to
-    full-time or contract work, on-site in the Helsinki area or remote.
+    I'm an ML engineer and M.Sc. student in Computer Science (ML & AI) at the University of Helsinki, and I take
+    projects from the raw data to the model, its evaluation and an app people use: for example a live MLOps system
+    that forecasts every Helsinki tram five minutes ahead, and a 1,480-run study of how multi-agent LLM pipelines
+    fail. I'm looking for ML / AI engineering roles in Finland, on-site in the Helsinki area or remote.
   # Skills that add to a lead's score when the posting mentions them.
-  skills: [python, fastapi, rag, llm, langchain, llamaindex, vector database, embeddings, pytorch, mlops,
-           docker, postgres, supabase, next.js, react, typescript, aws, kubernetes, fine-tuning, agents]
+  skills: [python, machine learning, pytorch, scikit-learn, gradient boosting, computer vision, yolo, opencv,
+           nlp, hugging face, time series, forecasting, rag, llm, langchain, langgraph, ollama, vector database,
+           embeddings, chromadb, qdrant, agents, mlops, docker, github actions, duckdb, polars, pandas, sql,
+           postgres, supabase, fastapi, django, next.js, react, typescript]
 
 # Drafts. Placeholders: {greeting} {first_name} {contact_name} {job_title} {company} {job_url} {your_name}
 # {your_email} {your_phone} {headline} {pitch} {portfolio_url} {cv_url} {linkedin_url} {github_url}
