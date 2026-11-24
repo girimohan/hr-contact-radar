@@ -7,3 +7,6 @@ __pycache__/
 private/
 cv.*
 *.cv.*
+# Built by the GitHub workflow (encrypted, but no reason to commit them)
+site/
+.state/

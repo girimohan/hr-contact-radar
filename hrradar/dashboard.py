@@ -12,6 +12,21 @@ def build(payload: dict) -> str:
     return TEMPLATE.read_text(encoding="utf-8").replace("/*__DATA__*/null", data, 1)
 
 
+def notice(payload: dict, url: str = "", limit: int = 15) -> str:
+    """A run summary with no people in it: safe for a GitHub issue on a public repo (GitHub emails it to you)."""
+    new = [l for l in payload["leads"] if l["first_seen"] == payload["date"] and l["contacts"]]
+    lines = [f"{len(payload['leads'])} openings kept, {payload['new_today']} new since the last run, "
+             f"{sum(1 for l in payload['leads'] if l['contacts'])} with someone to write to.", ""]
+    if url:
+        lines += [f"Open the dashboard (passphrase needed): {url}", ""]
+    for l in new[:limit]:
+        lines.append(f"- {l['title']} at {l['company']} ({l['country']}, score {l['score']})")
+    if len(new) > limit:
+        lines.append(f"- and {len(new) - limit} more")
+    lines += ["", "Contacts are only in the encrypted dashboard."]
+    return "\n".join(lines) + "\n"
+
+
 def digest(payload: dict, limit: int = 25) -> str:
     """Today's new leads with a contact, as Markdown (for a terminal or a private issue)."""
     new = [l for l in payload["leads"] if l["first_seen"] == payload["date"] and l["contacts"]]

@@ -87,14 +87,43 @@ python -m hrradar run --no-sites                  # skip reading company website
 1. Fill in `profile` in `config.yaml`: name, portfolio link, LinkedIn, and a two-sentence pitch. The drafts
    use them. Edit `outreach` to change the wording.
 2. Tune `roles`, `exclude_title` and `profile.skills` the same way as in remote-job-radar.
-3. Run it every morning with Windows Task Scheduler (one line, run once in PowerShell):
+3. Run it every day: on GitHub (next section) or with Windows Task Scheduler.
+
+## Live on GitHub (Actions + Pages, encrypted)
+
+`.github/workflows/daily.yml` runs the radar twice a day on GitHub and publishes the dashboard to
+`https://<you>.github.io/hr-contact-radar/`. The output is people's names and addresses, so on GitHub it only
+ever exists encrypted (AES-256-GCM, key from your passphrase with PBKDF2, 600,000 rounds):
+
+- **The page** is a lock screen; your browser decrypts the dashboard after you type the passphrase. Tick
+  *Remember on this device* on your own computer and phone only.
+- **The state** the next run needs (NAV ads, website contacts, first-seen dates) is saved encrypted in the
+  Actions cache.
+- **The issue** GitHub emails you after each run lists new jobs only, never contacts.
+
+Set up once:
+
+```powershell
+gh secret set RADAR_PASSPHRASE          # 12+ characters; it opens the page, so pick a long one and keep it
+gh workflow run daily.yml               # first run now instead of waiting for the morning
+```
+
+The repository is public (free GitHub Pages need that), so keep your own email and phone out of
+`config.yaml`. Put them in a second secret instead; it's merged over `profile`:
+
+```powershell
+gh secret set RADAR_PROFILE --body "email: you@example.com`nphone: '+358 40 000 0000'"
+```
+
+Your *Contacted* tracker lives in each browser's storage, so it isn't shared between your laptop and phone;
+use *Export* / *Import* in the dashboard to move it. Changing the passphrase starts the saved state fresh.
+The local run (below) keeps working the same way.
+
+Run it on your own computer instead, or as well, with Windows Task Scheduler:
 
 ```powershell
 schtasks /Create /SC DAILY /ST 07:30 /TN "HR Contact Radar" /TR "cmd /c cd /d %USERPROFILE%\Desktop\projects\hr-contact-radar && python -m hrradar run"
 ```
-
-Why not GitHub Actions like remote-job-radar: the output is people's names and addresses, and a public
-repository or GitHub Pages site would publish them. It stays on your computer.
 
 ## Good practice (and GDPR)
 
@@ -118,6 +147,7 @@ hrradar/
   enrich.py     company domain, website crawl, address format, MX check
   match.py      role, place (Finland / Nordics / remote-EU), language, score
   pipeline.py   collect -> select -> contacts -> enrich -> score -> private/
+  secure.py     encryption for the published page and the saved state
   dashboard_template.html
 data/           companies.json, plus caches with no personal data (domains, mx, seen, NAV cursor)
 private/        leads, dashboard, website and NAV caches: personal data, never committed

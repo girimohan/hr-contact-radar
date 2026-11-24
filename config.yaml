@@ -144,6 +144,7 @@ domains:
 
 # Where to find company job boards: this project's data/companies.json, plus remote-job-radar's list if present.
 shared_companies: ../remote-job-radar/data/companies.json
+shared_companies_url: https://raw.githubusercontent.com/girimohan/remote-job-radar/main/data/companies.json   # used on GitHub
 
 sources:
   # Public employment services: official APIs that list the contact person for each ad.

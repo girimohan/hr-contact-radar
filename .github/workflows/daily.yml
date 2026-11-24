@@ -1,0 +1,85 @@
+name: Daily HR contact radar
+
+# Contacts are personal data. On GitHub they only ever exist encrypted with the RADAR_PASSPHRASE secret:
+# the published page asks for the passphrase, the saved state is encrypted, and the issue lists jobs only.
+
+on:
+  schedule:
+    - cron: "41 4 * * *"   # 06:41 Helsinki in winter, 07:41 in summer
+    - cron: "5 11 * * *"   # backup: GitHub sometimes skips scheduled runs; a second run the same day is harmless
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  issues: write
+
+concurrency:
+  group: hr-radar
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      RADAR_PASSPHRASE: ${{ secrets.RADAR_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Check the passphrase secret is set
+        run: |
+          if [ ${#RADAR_PASSPHRASE} -lt 12 ]; then
+            echo "::error::Set the RADAR_PASSPHRASE secret (12+ characters): gh secret set RADAR_PASSPHRASE"; exit 1
+          fi
+      - name: Tests
+        run: python -m pytest -q
+
+      - name: Restore yesterday's state (encrypted)
+        uses: actions/cache/restore@v4
+        with:
+          path: .state
+          key: hr-radar-state-${{ github.run_id }}
+          restore-keys: hr-radar-state-
+      - run: python -m hrradar state load
+
+      - name: Collect, find contacts, score
+        id: radar
+        env:
+          RADAR_PROFILE: ${{ secrets.RADAR_PROFILE }}
+          DASHBOARD_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+        run: python -m hrradar run
+
+      - run: python -m hrradar state save
+      - name: Save today's state (encrypted)
+        uses: actions/cache/save@v4
+        with:
+          path: .state
+          key: hr-radar-state-${{ github.run_id }}
+
+      - name: Encrypt the dashboard
+        run: python -m hrradar seal --out site/index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Publish
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+      - name: Tell me about new leads (an issue, which GitHub emails to you; jobs only, no contacts)
+        if: steps.radar.outputs.new_today != '0' || steps.radar.outputs.first_run == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "HR radar $(date +%F): ${{ steps.radar.outputs.new_today }} new, ${{ steps.radar.outputs.kept }} open" \
+            --body-file private/notice.md

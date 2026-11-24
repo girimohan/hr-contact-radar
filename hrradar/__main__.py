@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 
-from . import dashboard, pipeline
+from . import dashboard, http, pipeline, secure
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -21,11 +21,17 @@ def load_companies(cfg: dict, cfg_path: Path) -> dict:
     paths = [ROOT / "data" / "companies.json"]
     if cfg.get("shared_companies"):
         paths.append((cfg_path.parent / cfg["shared_companies"]).resolve())
+    sources = []
     for p in paths:
         try:
-            data = json.loads(p.read_text(encoding="utf-8"))
+            sources.append(json.loads(p.read_text(encoding="utf-8")))
         except (OSError, ValueError):
-            continue
+            if p != paths[0] and cfg.get("shared_companies_url"):   # on GitHub the sister repo isn't next door
+                try:
+                    sources.append(http.get(cfg["shared_companies_url"], as_json=True) or {})
+                except http.FetchError as e:
+                    print(f"shared company list not loaded: {e}", file=sys.stderr)
+    for data in sources:
         for k, v in data.items():
             if isinstance(v, list):
                 merged[k] = list(dict.fromkeys(merged.get(k, []) + v))
@@ -37,6 +43,10 @@ def cmd_run(args) -> int:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     cfg_path = Path(args.config)
     cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
+    # On a public repo, keep your own email/phone out of config.yaml: put them in the RADAR_PROFILE secret (YAML).
+    extra = yaml.safe_load(os.environ.get("RADAR_PROFILE") or "") or {}
+    if isinstance(extra, dict):
+        cfg["profile"] = {**(cfg.get("profile") or {}), **{k: v for k, v in extra.items() if v}}
     companies = load_companies(cfg, cfg_path)
     only = set(args.sources.split(",")) if args.sources else None
     try:
@@ -47,6 +57,8 @@ def cmd_run(args) -> int:
         return 1
     text = dashboard.digest(payload)
     (ROOT / "private" / "digest.md").write_text(text, encoding="utf-8")
+    (ROOT / "private" / "notice.md").write_text(dashboard.notice(payload, os.environ.get("DASHBOARD_URL", "")),
+                                                encoding="utf-8")
 
     f, L = payload["funnel"], payload["leads"]
     named = sum(1 for l in L if l["contacts"] and l["contacts"][0]["name"] and l["contacts"][0]["kind"] in ("posting", "ats_field"))
@@ -67,7 +79,36 @@ def cmd_run(args) -> int:
     gh = os.environ.get("GITHUB_OUTPUT")
     if gh:
         with open(gh, "a", encoding="utf-8") as fh:
-            fh.write(f"new_today={payload['new_today']}\nkept={len(L)}\n")
+            fh.write(f"new_today={payload['new_today']}\nkept={len(L)}\nfirst_run={str(payload['first_run']).lower()}\n")
+    return 0
+
+
+def cmd_seal(args) -> int:
+    """Encrypt private/dashboard.html into a page that is safe to publish."""
+    html = (ROOT / "private" / "dashboard.html").read_text(encoding="utf-8")
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(secure.seal_page(html, secure.passphrase_from_env()), encoding="utf-8")
+    (out.parent / ".nojekyll").write_text("", encoding="utf-8")
+    print(f"Encrypted dashboard: {out} ({out.stat().st_size // 1024} KB)")
+    return 0
+
+
+def cmd_state(args) -> int:
+    """Save or restore what a run needs the next day, encrypted (for the GitHub Actions cache)."""
+    p, path = secure.passphrase_from_env(), Path(args.file)
+    if args.action == "save":
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(secure.pack_state(ROOT, p))
+        print(f"State saved: {path} ({path.stat().st_size // 1024} KB)")
+        return 0
+    if not path.is_file():
+        print("No saved state yet; starting fresh.")
+        return 0
+    try:
+        print("State restored: " + ", ".join(secure.unpack_state(path.read_bytes(), ROOT, p)))
+    except secure.BadPassphrase:
+        print("Saved state doesn't open with this passphrase (was it changed?); starting fresh.")
     return 0
 
 
@@ -81,6 +122,13 @@ def main(argv=None) -> int:
     r.add_argument("--no-sites", action="store_true", help="skip reading company websites")
     r.add_argument("--open", action="store_true", help="open the dashboard when done")
     r.set_defaults(fn=cmd_run)
+    s = sub.add_parser("seal", help="encrypt the dashboard with RADAR_PASSPHRASE for publishing")
+    s.add_argument("--out", default=str(ROOT / "site" / "index.html"))
+    s.set_defaults(fn=cmd_seal)
+    st = sub.add_parser("state", help="save/restore the run's state, encrypted with RADAR_PASSPHRASE")
+    st.add_argument("action", choices=["save", "load"])
+    st.add_argument("--file", default=str(ROOT / ".state" / "state.bin"))
+    st.set_defaults(fn=cmd_state)
     args = ap.parse_args(argv)
     return args.fn(args)
 

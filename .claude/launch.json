@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8765", "--bind", "127.0.0.1", "-d", "private"],
       "port": 8765
+    },
+    {
+      "name": "sealed-page",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8793", "--bind", "127.0.0.1", "-d", "site"],
+      "port": 8793
     }
   ]
 }
